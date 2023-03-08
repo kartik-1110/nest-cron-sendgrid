@@ -1,20 +1,20 @@
+import { config } from 'dotenv';
 import { Injectable } from '@nestjs/common';
 import { Cron, Interval, Timeout } from '@nestjs/schedule';
 import * as fsMo from 'fs';
 import { formatDate } from 'utils';
 const dir = 'testDirectory';
 const currentDate = formatDate(new Date());
-const logsThreshold = parseInt(<string>process.env.LOGS_THRESHOLD);
 
+config();
 @Injectable()
 export class FileDeleteService {
   /* this function is used to check the number of files in the directory */
   checkFileCount() {
     fsMo.readdir(dir, (err, files: string[]) => {
       if (err) throw new Error();
-      if (files && files.length > logsThreshold) {
-        console.log('files>>>>>>>>>>>>', files.length);
-        // this.checkTodaysFile(files);
+      if (files.length > parseInt(process.env.LOGS_THRESHOLD, 10)) {
+        this.checkTodaysFile(files);
       } else {
         process.stdout.write('Your files are less than logs threshold!!');
       }
@@ -24,10 +24,8 @@ export class FileDeleteService {
   /* Check if file is create today */
   checkTodaysFile(files: string[]) {
     const fileIndex = files.indexOf(`${currentDate}-error.log`);
-    console.log('fileIndex', fileIndex);
 
     if (fileIndex > -1) {
-      console.log('file removed');
       files.splice(fileIndex, 1);
     }
     this.deleteLogFiles(files);
